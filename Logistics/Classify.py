@@ -5,9 +5,19 @@ from math import exp
 
 
 def sigmod(vec, _weight):
-    result = np.sum(vec * _weight.T)
+    result = np.sum(vec * _weight)
     result = 1 / (1 + exp(-result))
     return result
+
+
+def data_norm(data):
+    num = data.shape[0]
+    data_max = np.max(data, 0)
+    data_min = np.min(data, 0)
+    area = data_max - data_min
+    for i in range(num):
+        data[i, :] = (data[i, :] - data_min) / area
+    return data
 
 
 def train(data, label, n):
@@ -28,10 +38,10 @@ def train(data, label, n):
 def test(data, weights, label):
     x = data * weights
     a = 0
-    result = sum(x, 1)
+    result = np.sum(x, axis=1)
     num = data.shape[0]
     for i in range(num):
-        temp = result[i] + label[i]
+        temp = 1 / (1 + exp(-result[i])) + label[i]
         if temp >= 1.5 or temp < 0.5:
             a += 1
     return a / num
@@ -39,5 +49,9 @@ def test(data, weights, label):
 
 if __name__ == '__main__':
     traindata, trainlabel, testdata, testlabel = read_data()
-    weight = train(np.mat(traindata), np.mat(trainlabel).T, 100)
+    traindata = data_norm(np.array(traindata))
+    testdata = data_norm(np.array(testdata))
+    trainlabel = np.array(trainlabel)
+    testlabel = np. array(testlabel)
+    weight = train(traindata, trainlabel, 100)
     print("准确率为: ", test(np.array(testdata), np.array(weight), testlabel))
